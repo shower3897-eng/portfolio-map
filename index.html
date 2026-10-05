@@ -18,7 +18,11 @@ h1{margin:0;font-size:28px;letter-spacing:.4px}
 .tile .inner{width:100%}
 .name{font-weight:700;line-height:1.1}
 .weight{font-weight:800;margin-top:5px}
-.change{font-size:12px;margin-top:5px;opacity:.9}
+.change{font-size:12px;margin-top:5px;opacity:.85}
+.holding{font-size:12px;margin-top:5px;font-weight:800}
+.holding.pos{color:#ff8d8d}
+.holding.neg{color:#87b7ff}
+.holding.na{color:#c7d0da}
 .sector{position:absolute;left:7px;top:6px;font-size:10px;opacity:.72}
 footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -33,20 +37,24 @@ footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 <div class="badge">2026.10.05 · 한국증시 휴장</div>
 </header>
 <div id="map"></div>
-<div class="legend"><span>박스 크기 = 포트폴리오 비중</span><span>당일 등락률 = 휴장</span></div>
-<footer>종목명·섹터·비중만 표시하는 공개용 포트폴리오 맵입니다.</footer>
+<div class="legend">
+  <span>박스 크기 = 포트폴리오 비중</span>
+  <span>당일 등락률 = 휴장</span>
+  <span>보유수익률 = 현재가 ÷ 매수가 - 1</span>
+</div>
+<footer>종목명·섹터·비중·보유수익률만 표시하는 공개용 포트폴리오 맵입니다.</footer>
 </div>
 <script>
 const data=[
-{name:"HD현대중공업",sector:"조선",weight:74.8912},
-{name:"HD한국조선해양",sector:"조선",weight:4.6665},
-{name:"삼성중공업",sector:"조선",weight:4.0402},
-{name:"한국카본",sector:"LNG 기자재",weight:2.1790},
-{name:"한화엔진",sector:"엔진",weight:1.8551},
-{name:"케이엠더블유",sector:"5G",weight:1.0135},
-{name:"삼성전자우",sector:"반도체",weight:4.2625},
-{name:"현금",sector:"현금",weight:6.0317},
-{name:"카뱅",sector:"현금성",weight:1.0603}
+{name:"HD현대중공업",sector:"조선",weight:74.8912,holdingReturn:-17.22594208924831},
+{name:"HD한국조선해양",sector:"조선",weight:4.6665,holdingReturn:-12.31585657456245},
+{name:"삼성중공업",sector:"조선",weight:4.0402,holdingReturn:-23.85457597375348},
+{name:"한국카본",sector:"LNG 기자재",weight:2.1790,holdingReturn:-41.19498655067819},
+{name:"한화엔진",sector:"엔진",weight:1.8551,holdingReturn:-16.56079387425746},
+{name:"케이엠더블유",sector:"5G",weight:1.0135,holdingReturn:29.1151633826949},
+{name:"삼성전자우",sector:"반도체",weight:4.2625,holdingReturn:-14.822929158950528},
+{name:"현금",sector:"현금",weight:6.0317,holdingReturn:null},
+{name:"카뱅",sector:"현금성",weight:1.0603,holdingReturn:null}
 ];
 const total=data.reduce((s,d)=>s+d.weight,0);data.forEach(d=>d.weight=d.weight/total*100);
 const sectorColors={"조선":"#7a1f2b","LNG 기자재":"#7b4a12","엔진":"#5f3c16","5G":"#243e7a","반도체":"#3a2f78","현금":"#38424f","현금성":"#45515f"};
@@ -61,6 +69,10 @@ function splitTreemap(items,x,y,w,h){
  ? splitTreemap(a,x,y,w*ratio,h).concat(splitTreemap(b,x+w*ratio,y,w-w*ratio,h))
  : splitTreemap(a,x,y,w,h*ratio).concat(splitTreemap(b,x,y+h*ratio,w,h-h*ratio));
 }
+function holdingText(v){
+ if(v===null || v===undefined) return {text:"보유수익률 -",cls:"na"};
+ return {text:"보유수익률 "+(v>=0?"+":"")+v.toFixed(1)+"%",cls:v>=0?"pos":"neg"};
+}
 function render(){
  const map=document.getElementById("map");map.innerHTML="";
  const rect=map.getBoundingClientRect();
@@ -69,7 +81,8 @@ function render(){
   const el=document.createElement("div");el.className="tile";
   Object.assign(el.style,{left:d.x+"px",top:d.y+"px",width:d.w+"px",height:d.h+"px",background:sectorColors[d.sector]||"#39414d"});
   const area=d.w*d.h,fs=Math.max(11,Math.min(30,Math.sqrt(area)/15));
-  el.innerHTML='<div class="sector">'+d.sector+'</div><div class="inner"><div class="name" style="font-size:'+fs+'px">'+d.name+'</div><div class="weight" style="font-size:'+Math.max(12,fs*.88)+'px">'+d.weight.toFixed(1)+'%</div><div class="change">휴장</div></div>';
+  const hr=holdingText(d.holdingReturn);
+  el.innerHTML='<div class="sector">'+d.sector+'</div><div class="inner"><div class="name" style="font-size:'+fs+'px">'+d.name+'</div><div class="weight" style="font-size:'+Math.max(12,fs*.88)+'px">'+d.weight.toFixed(1)+'%</div><div class="change">휴장</div><div class="holding '+hr.cls+'">'+hr.text+'</div></div>';
   map.appendChild(el);
  });
 }
