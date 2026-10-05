@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Portfolio Map</title>
+<style>
+:root{--bg:#0c0f14;--panel:#151a22;--line:#2a313d;--text:#f3f6fa;--muted:#9aa6b2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Noto Sans KR",sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:20px}
+header{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:16px}
+h1{margin:0;font-size:28px;letter-spacing:.4px}
+.sub{color:var(--muted);font-size:13px;margin-top:6px}
+.badge{border:1px solid var(--line);background:#11161d;padding:8px 12px;border-radius:999px;color:#c9d3dd;font-size:13px}
+#map{position:relative;width:100%;height:72vh;min-height:560px;background:#0a0d12;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tile{position:absolute;border:2px solid #0a0d12;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:8px}
+.tile .inner{width:100%}
+.name{font-weight:700;line-height:1.1}
+.weight{font-weight:800;margin-top:5px}
+.change{font-size:12px;margin-top:5px;opacity:.9}
+.sector{position:absolute;left:7px;top:6px;font-size:10px;opacity:.72}
+footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.legend span{padding:4px 8px;border-radius:5px;background:#1b222c;border:1px solid #2c3542}
+@media(max-width:700px){h1{font-size:22px}#map{height:68vh;min-height:520px}.wrap{padding:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div><h1>MY PORTFOLIO</h1><div class="sub">메인포트 기준 · 금액/수량/매수가격 비공개</div></div>
+<div class="badge">2026.10.05 · 한국증시 휴장</div>
+</header>
+<div id="map"></div>
+<div class="legend"><span>박스 크기 = 포트폴리오 비중</span><span>당일 등락률 = 휴장</span></div>
+<footer>종목명·섹터·비중만 표시하는 공개용 포트폴리오 맵입니다.</footer>
+</div>
+<script>
+const data=[
+{name:"HD현대중공업",sector:"조선",weight:74.8912},
+{name:"HD한국조선해양",sector:"조선",weight:4.6665},
+{name:"삼성중공업",sector:"조선",weight:4.0402},
+{name:"한국카본",sector:"LNG 기자재",weight:2.1790},
+{name:"한화엔진",sector:"엔진",weight:1.8551},
+{name:"케이엠더블유",sector:"5G",weight:1.0135},
+{name:"삼성전자우",sector:"반도체",weight:4.2625},
+{name:"현금",sector:"현금",weight:6.0317},
+{name:"카뱅",sector:"현금성",weight:1.0603}
+];
+const total=data.reduce((s,d)=>s+d.weight,0);data.forEach(d=>d.weight=d.weight/total*100);
+const sectorColors={"조선":"#7a1f2b","LNG 기자재":"#7b4a12","엔진":"#5f3c16","5G":"#243e7a","반도체":"#3a2f78","현금":"#38424f","현금성":"#45515f"};
+function splitTreemap(items,x,y,w,h){
+ if(!items.length)return[];
+ if(items.length===1)return[{...items[0],x,y,w,h}];
+ const total=items.reduce((a,b)=>a+b.weight,0);
+ let acc=0,cut=1;
+ for(let i=0;i<items.length;i++){acc+=items[i].weight;if(acc>=total/2){cut=i+1;break}}
+ const a=items.slice(0,cut),b=items.slice(cut),sa=a.reduce((s,d)=>s+d.weight,0),ratio=sa/total;
+ return w>=h
+ ? splitTreemap(a,x,y,w*ratio,h).concat(splitTreemap(b,x+w*ratio,y,w-w*ratio,h))
+ : splitTreemap(a,x,y,w,h*ratio).concat(splitTreemap(b,x,y+h*ratio,w,h-h*ratio));
+}
+function render(){
+ const map=document.getElementById("map");map.innerHTML="";
+ const rect=map.getBoundingClientRect();
+ const boxes=splitTreemap([...data].sort((a,b)=>b.weight-a.weight),0,0,rect.width,rect.height);
+ boxes.forEach(d=>{
+  const el=document.createElement("div");el.className="tile";
+  Object.assign(el.style,{left:d.x+"px",top:d.y+"px",width:d.w+"px",height:d.h+"px",background:sectorColors[d.sector]||"#39414d"});
+  const area=d.w*d.h,fs=Math.max(11,Math.min(30,Math.sqrt(area)/15));
+  el.innerHTML='<div class="sector">'+d.sector+'</div><div class="inner"><div class="name" style="font-size:'+fs+'px">'+d.name+'</div><div class="weight" style="font-size:'+Math.max(12,fs*.88)+'px">'+d.weight.toFixed(1)+'%</div><div class="change">휴장</div></div>';
+  map.appendChild(el);
+ });
+}
+window.addEventListener("resize",render);render();
+</script>
+</body></html>
