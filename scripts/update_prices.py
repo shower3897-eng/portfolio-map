@@ -1,47 +1,78 @@
 import json
-from datetime import datetime, timedelta
+import re
+from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from pykrx import stock
+import requests
+from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data.json"
 KST = ZoneInfo("Asia/Seoul")
 
-
-def market_frame(day):
-    return stock.get_market_ohlcv_by_ticker(day.strftime("%Y%m%d"), market="ALL")
-
-
-def find_trading_day(start_day, max_lookback=10):
-    day = start_day
-    for _ in range(max_lookback):
-        df = market_frame(day)
-        if df is not None and not df.empty and "종가" in df.columns:
-            return day, df
-        day -= timedelta(days=1)
-    raise RuntimeError("최근 거래일을 찾지 못했습니다.")
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36",
+    "Referer": "https://finance.naver.com/"
+}
 
 
-def previous_trading_day(day):
-    prev, df = find_trading_day(day - timedelta(days=1), 10)
-    return prev, df
+def get_recent_closes(code: str):
+    url = f"https://finance.naver.com/item/sise_day.naver?code={code}&page=1"
+    r = requests.get(url, headers=HEADERS, timeout=20)
+    r.raise_for_status()
+    r.encoding = "euc-kr"
+
+    soup = BeautifulSoup(r.text, "html.parser")
+    rows = []
+
+    for tr in soup.select("table.type2 tr"):
+        tds = tr.find_all("td")
+        if len(tds) < 7:
+            continue
+
+        date_text = tds[0].get_text(strip=True)
+        close_text = tds[1].get_text(strip=True).replace(",", "")
+
+        if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}", date_text):
+            continue
+        if not close_text.isdigit():
+            continue
+
+        rows.append((date_text.replace(".", "-"), float(close_text)))
+
+    if len(rows) < 2:
+        raise RuntimeError(f"{code}: 최근 2거래일 종가를 읽지 못했습니다.")
+
+    return rows[0], rows[1]
 
 
 def main():
     data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
-    today = datetime.now(KST).date()
 
-    latest_day, latest_df = find_trading_day(today)
-    prev_day, prev_df = previous_trading_day(latest_day)
+    stock_rows = [item for item in data["items"] if item.get("code")]
+    if not stock_rows:
+        raise RuntimeError("종목 코드가 없습니다.")
 
-    latest_str = latest_day.isoformat()
-    previous_asof = data.get("asOfDate")
+    prices = {}
+    latest_dates = set()
 
-    # 휴장일/중복 실행이면 데이터 변경 없이 종료
-    if previous_asof == latest_str:
-        print(f"이미 최신 종가 반영 완료: {latest_str}")
+    for item in stock_rows:
+        latest, previous = get_recent_closes(item["code"])
+        prices[item["code"]] = {
+            "latest_date": latest[0],
+            "close": latest[1],
+            "prev_date": previous[0],
+            "prev_close": previous[1],
+        }
+        latest_dates.add(latest[0])
+
+    if len(latest_dates) != 1:
+        raise RuntimeError(f"종목별 최신 거래일이 다릅니다: {sorted(latest_dates)}")
+
+    latest_date = next(iter(latest_dates))
+    if data.get("asOfDate") == latest_date:
+        print(f"이미 최신 종가 반영 완료: {latest_date}")
         return
 
     adjusted = []
@@ -55,27 +86,18 @@ def main():
             adjusted.append((item, weight))
             continue
 
-        if code not in latest_df.index:
-            raise RuntimeError(f"{code} {item['name']} 최신 종가를 찾을 수 없습니다.")
-
-        close = float(latest_df.loc[code, "종가"])
-        prev_close = float(prev_df.loc[code, "종가"]) if code in prev_df.index else None
+        p = prices[code]
+        close = p["close"]
+        prev_close = p["prev_close"]
         old_close = item.get("lastClose")
 
-        if old_close and float(old_close) > 0:
-            price_factor = close / float(old_close)
-        else:
-            price_factor = 1.0
+        price_factor = close / float(old_close) if old_close and float(old_close) > 0 else 1.0
 
         old_hr = item.get("holdingReturn")
         if old_hr is not None:
             item["holdingReturn"] = ((1 + float(old_hr) / 100.0) * price_factor - 1) * 100.0
 
-        if prev_close and prev_close > 0:
-            item["dailyChange"] = (close / prev_close - 1) * 100.0
-        else:
-            item["dailyChange"] = None
-
+        item["dailyChange"] = (close / prev_close - 1) * 100.0 if prev_close > 0 else None
         item["lastClose"] = int(close)
         adjusted.append((item, weight * price_factor))
 
@@ -86,15 +108,16 @@ def main():
     for item, adjusted_weight in adjusted:
         item["weight"] = adjusted_weight / total * 100.0
 
-    data["asOfDate"] = latest_str
+    data["asOfDate"] = latest_date
+    data["previousTradingDate"] = next(iter(prices.values()))["prev_date"]
     data["updatedAt"] = datetime.now(KST).isoformat(timespec="seconds")
-    data["previousTradingDate"] = prev_day.isoformat()
 
     DATA_PATH.write_text(
         json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8"
+        encoding="utf-8",
     )
-    print(f"업데이트 완료: {latest_str}")
+
+    print(f"업데이트 완료: {latest_date}")
 
 
 if __name__ == "__main__":
