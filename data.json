@@ -1,15 +1,88 @@
 {
-  "asOfDate": "2026-10-02",
-  "updatedAt": "2026-10-05T10:45:00+09:00",
+  "asOfDate": "2026-10-06",
+  "updatedAt": "2026-10-06T20:51:56+09:00",
   "items": [
-    {"code":"329180","name":"HD현대중공업","sector":"조선","weight":74.89122242073302,"holdingReturn":-17.22594208924831,"dailyChange":null,"lastClose":426000},
-    {"code":"009540","name":"HD한국조선해양","sector":"조선","weight":4.666466610510514,"holdingReturn":-12.31585657456245,"dailyChange":null,"lastClose":326000},
-    {"code":"010140","name":"삼성중공업","sector":"조선","weight":4.040203676412471,"holdingReturn":-23.85457597375348,"dailyChange":null,"lastClose":19960},
-    {"code":"017960","name":"한국카본","sector":"LNG 기자재","weight":2.178956801772122,"holdingReturn":-41.19498655067819,"dailyChange":null,"lastClose":20550},
-    {"code":"082740","name":"한화엔진","sector":"엔진","weight":1.855135192399272,"holdingReturn":-16.56079387425746,"dailyChange":null,"lastClose":48600},
-    {"code":"032500","name":"케이엠더블유","sector":"5G","weight":1.013485294324986,"holdingReturn":29.1151633826949,"dailyChange":null,"lastClose":21100},
-    {"code":"005935","name":"삼성전자우","sector":"반도체","weight":4.262484838503128,"holdingReturn":-14.822929158950528,"dailyChange":null,"lastClose":201000},
-    {"code":null,"name":"현금","sector":"현금","weight":6.031725553776543,"holdingReturn":null,"dailyChange":null,"lastClose":null},
-    {"code":null,"name":"카뱅","sector":"현금성","weight":1.060319611567942,"holdingReturn":null,"dailyChange":null,"lastClose":null}
-  ]
+    {
+      "code": "329180",
+      "name": "HD현대중공업",
+      "sector": "조선",
+      "weight": 74.8563336713979,
+      "holdingReturn": -18.29462124067821,
+      "dailyChange": -1.2910798122065748,
+      "lastClose": 420500
+    },
+    {
+      "code": "009540",
+      "name": "HD한국조선해양",
+      "sector": "조선",
+      "weight": 4.616589198963167,
+      "holdingReturn": -14.33312981287772,
+      "dailyChange": -2.300613496932513,
+      "lastClose": 318500
+    },
+    {
+      "code": "010140",
+      "name": "삼성중공업",
+      "sector": "조선",
+      "weight": 4.037849990863831,
+      "holdingReturn": -24.846450234616402,
+      "dailyChange": -1.3026052104208374,
+      "lastClose": 19700
+    },
+    {
+      "code": "017960",
+      "name": "한국카본",
+      "sector": "LNG 기자재",
+      "weight": 2.201060028577125,
+      "holdingReturn": -41.33806444228239,
+      "dailyChange": -0.24330900243308973,
+      "lastClose": 20500
+    },
+    {
+      "code": "082740",
+      "name": "한화엔진",
+      "sector": "엔진",
+      "weight": 1.834073532105095,
+      "holdingReturn": -18.535178381348082,
+      "dailyChange": -2.366255144032925,
+      "lastClose": 47450
+    },
+    {
+      "code": "032500",
+      "name": "케이엠더블유",
+      "sector": "5G",
+      "weight": 1.0165354162224214,
+      "holdingReturn": 27.891322971484513,
+      "dailyChange": -0.9478672985781977,
+      "lastClose": 20900
+    },
+    {
+      "code": "005935",
+      "name": "삼성전자우",
+      "sector": "반도체",
+      "weight": 4.256098513794987,
+      "holdingReturn": -16.00947541942286,
+      "dailyChange": -1.3930348258706426,
+      "lastClose": 198200
+    },
+    {
+      "code": null,
+      "name": "현금",
+      "sector": "현금",
+      "weight": 6.107771829257366,
+      "holdingReturn": null,
+      "dailyChange": null,
+      "lastClose": null
+    },
+    {
+      "code": null,
+      "name": "카뱅",
+      "sector": "현금성",
+      "weight": 1.0736878188181094,
+      "holdingReturn": null,
+      "dailyChange": null,
+      "lastClose": null
+    }
+  ],
+  "previousTradingDate": "2026-10-02"
 }
