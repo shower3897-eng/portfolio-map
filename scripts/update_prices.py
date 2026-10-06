@@ -1,50 +1,62 @@
 import json
-import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
-from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data.json"
 KST = ZoneInfo("Asia/Seoul")
 
+SYMBOLS = {
+    "329180": "329180.KS",
+    "009540": "009540.KS",
+    "010140": "010140.KS",
+    "017960": "017960.KS",
+    "082740": "082740.KS",
+    "032500": "032500.KQ",
+    "005935": "005935.KS",
+}
+
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36",
-    "Referer": "https://finance.naver.com/"
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json,text/plain,*/*",
 }
 
 
 def get_recent_closes(code: str):
-    url = f"https://finance.naver.com/item/sise_day.naver?code={code}&page=1"
-    r = requests.get(url, headers=HEADERS, timeout=20)
+    symbol = SYMBOLS.get(code)
+    if not symbol:
+        raise RuntimeError(f"{code}: Yahoo symbol mapping이 없습니다.")
+
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+    params = {"range": "10d", "interval": "1d", "events": "history"}
+
+    r = requests.get(url, params=params, headers=HEADERS, timeout=20)
     r.raise_for_status()
-    r.encoding = "euc-kr"
+    payload = r.json()
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    result = payload.get("chart", {}).get("result")
+    if not result:
+        err = payload.get("chart", {}).get("error")
+        raise RuntimeError(f"{code}: Yahoo 응답 오류: {err}")
+
+    block = result[0]
+    timestamps = block.get("timestamp") or []
+    closes = (((block.get("indicators") or {}).get("quote") or [{}])[0].get("close") or [])
+
     rows = []
-
-    for tr in soup.select("table.type2 tr"):
-        tds = tr.find_all("td")
-        if len(tds) < 7:
+    for ts, close in zip(timestamps, closes):
+        if close is None:
             continue
-
-        date_text = tds[0].get_text(strip=True)
-        close_text = tds[1].get_text(strip=True).replace(",", "")
-
-        if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}", date_text):
-            continue
-        if not close_text.isdigit():
-            continue
-
-        rows.append((date_text.replace(".", "-"), float(close_text)))
+        dt = datetime.fromtimestamp(ts, tz=KST)
+        rows.append((dt.date().isoformat(), float(close)))
 
     if len(rows) < 2:
         raise RuntimeError(f"{code}: 최근 2거래일 종가를 읽지 못했습니다.")
 
-    return rows[0], rows[1]
+    return rows[-1], rows[-2]
 
 
 def main():
@@ -98,7 +110,7 @@ def main():
             item["holdingReturn"] = ((1 + float(old_hr) / 100.0) * price_factor - 1) * 100.0
 
         item["dailyChange"] = (close / prev_close - 1) * 100.0 if prev_close > 0 else None
-        item["lastClose"] = int(close)
+        item["lastClose"] = int(round(close))
         adjusted.append((item, weight * price_factor))
 
     total = sum(v for _, v in adjusted)
@@ -108,8 +120,9 @@ def main():
     for item, adjusted_weight in adjusted:
         item["weight"] = adjusted_weight / total * 100.0
 
+    sample = next(iter(prices.values()))
     data["asOfDate"] = latest_date
-    data["previousTradingDate"] = next(iter(prices.values()))["prev_date"]
+    data["previousTradingDate"] = sample["prev_date"]
     data["updatedAt"] = datetime.now(KST).isoformat(timespec="seconds")
 
     DATA_PATH.write_text(
