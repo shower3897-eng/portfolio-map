@@ -5,6 +5,11 @@ on:
     # 16:45 Asia/Seoul = 07:45 UTC, Monday-Friday
     - cron: "45 7 * * 1-5"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/update_prices.py"
+      - ".github/workflows/update-portfolio.yml"
 
 permissions:
   contents: write
@@ -24,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pykrx
+          pip install requests beautifulsoup4
 
       - name: Update portfolio data
         run: python scripts/update_prices.py
