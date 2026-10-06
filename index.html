@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Portfolio Map</title>
 <style>
-:root{--bg:#0c0f14;--panel:#151a22;--line:#2a313d;--text:#f3f6fa;--muted:#9aa6b2}
+:root{--bg:#0c0f14;--line:#2a313d;--text:#f3f6fa;--muted:#9aa6b2}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Noto Sans KR",sans-serif}
 .wrap{max-width:1500px;margin:0 auto;padding:20px}
@@ -18,46 +18,40 @@ h1{margin:0;font-size:28px;letter-spacing:.4px}
 .tile .inner{width:100%}
 .name{font-weight:700;line-height:1.1}
 .weight{font-weight:800;margin-top:5px}
-.change{font-size:12px;margin-top:5px;opacity:.85}
-.holding{font-size:12px;margin-top:5px;font-weight:800}
-.holding.pos{color:#ff8d8d}
-.holding.neg{color:#87b7ff}
-.holding.na{color:#c7d0da}
+.change,.holding{font-size:12px;margin-top:5px;font-weight:800}
+.pos{color:#ff9a9a}.neg{color:#8cbcff}.flat{color:#d8dee6}.na{color:#c7d0da}
 .sector{position:absolute;left:7px;top:6px;font-size:10px;opacity:.72}
 footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .legend span{padding:4px 8px;border-radius:5px;background:#1b222c;border:1px solid #2c3542}
+.loading{height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
 @media(max-width:700px){h1{font-size:22px}#map{height:68vh;min-height:520px}.wrap{padding:12px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-<div><h1>MY PORTFOLIO</h1><div class="sub">메인포트 기준 · 금액/수량/매수가격 비공개</div></div>
-<div class="badge">2026.10.05 · 한국증시 휴장</div>
+  <div>
+    <h1>MY PORTFOLIO</h1>
+    <div class="sub">메인포트 기준 · 금액/수량/매수가격 비공개 · 매일 종가 자동 업데이트</div>
+  </div>
+  <div class="badge" id="badge">데이터 불러오는 중</div>
 </header>
-<div id="map"></div>
+
+<div id="map"><div class="loading">포트폴리오 데이터를 불러오는 중입니다.</div></div>
+
 <div class="legend">
-  <span>박스 크기 = 포트폴리오 비중</span>
-  <span>당일 등락률 = 휴장</span>
-  <span>보유수익률 = 현재가 ÷ 매수가 - 1</span>
+  <span>박스 크기 = 최신 종가 기준 포트폴리오 비중</span>
+  <span>당일 등락률 = 전 거래일 종가 대비</span>
+  <span>보유수익률 = 현재 종가 ÷ 매수가 - 1</span>
 </div>
-<footer>종목명·섹터·비중·보유수익률만 표시하는 공개용 포트폴리오 맵입니다.</footer>
+<footer id="footer">공개 페이지에는 종목명·섹터·비중·수익률만 표시합니다.</footer>
 </div>
+
 <script>
-const data=[
-{name:"HD현대중공업",sector:"조선",weight:74.8912,holdingReturn:-17.22594208924831},
-{name:"HD한국조선해양",sector:"조선",weight:4.6665,holdingReturn:-12.31585657456245},
-{name:"삼성중공업",sector:"조선",weight:4.0402,holdingReturn:-23.85457597375348},
-{name:"한국카본",sector:"LNG 기자재",weight:2.1790,holdingReturn:-41.19498655067819},
-{name:"한화엔진",sector:"엔진",weight:1.8551,holdingReturn:-16.56079387425746},
-{name:"케이엠더블유",sector:"5G",weight:1.0135,holdingReturn:29.1151633826949},
-{name:"삼성전자우",sector:"반도체",weight:4.2625,holdingReturn:-14.822929158950528},
-{name:"현금",sector:"현금",weight:6.0317,holdingReturn:null},
-{name:"카뱅",sector:"현금성",weight:1.0603,holdingReturn:null}
-];
-const total=data.reduce((s,d)=>s+d.weight,0);data.forEach(d=>d.weight=d.weight/total*100);
+let portfolioData=[];
 const sectorColors={"조선":"#7a1f2b","LNG 기자재":"#7b4a12","엔진":"#5f3c16","5G":"#243e7a","반도체":"#3a2f78","현금":"#38424f","현금성":"#45515f"};
+
 function splitTreemap(items,x,y,w,h){
  if(!items.length)return[];
  if(items.length===1)return[{...items[0],x,y,w,h}];
@@ -69,23 +63,54 @@ function splitTreemap(items,x,y,w,h){
  ? splitTreemap(a,x,y,w*ratio,h).concat(splitTreemap(b,x+w*ratio,y,w-w*ratio,h))
  : splitTreemap(a,x,y,w,h*ratio).concat(splitTreemap(b,x,y+h*ratio,w,h-h*ratio));
 }
-function holdingText(v){
- if(v===null || v===undefined) return {text:"보유수익률 -",cls:"na"};
- return {text:"보유수익률 "+(v>=0?"+":"")+v.toFixed(1)+"%",cls:v>=0?"pos":"neg"};
+
+function pct(v,label){
+ if(v===null||v===undefined) return {text:label+" -",cls:"na"};
+ const sign=v>0?"+":"";
+ return {text:label+" "+sign+Number(v).toFixed(1)+"%",cls:v>0?"pos":v<0?"neg":"flat"};
 }
+
 function render(){
- const map=document.getElementById("map");map.innerHTML="";
+ const map=document.getElementById("map");
+ if(!portfolioData.length){map.innerHTML='<div class="loading">표시할 데이터가 없습니다.</div>';return;}
+ map.innerHTML="";
  const rect=map.getBoundingClientRect();
- const boxes=splitTreemap([...data].sort((a,b)=>b.weight-a.weight),0,0,rect.width,rect.height);
+ const boxes=splitTreemap([...portfolioData].sort((a,b)=>b.weight-a.weight),0,0,rect.width,rect.height);
  boxes.forEach(d=>{
   const el=document.createElement("div");el.className="tile";
   Object.assign(el.style,{left:d.x+"px",top:d.y+"px",width:d.w+"px",height:d.h+"px",background:sectorColors[d.sector]||"#39414d"});
   const area=d.w*d.h,fs=Math.max(11,Math.min(30,Math.sqrt(area)/15));
-  const hr=holdingText(d.holdingReturn);
-  el.innerHTML='<div class="sector">'+d.sector+'</div><div class="inner"><div class="name" style="font-size:'+fs+'px">'+d.name+'</div><div class="weight" style="font-size:'+Math.max(12,fs*.88)+'px">'+d.weight.toFixed(1)+'%</div><div class="change">휴장</div><div class="holding '+hr.cls+'">'+hr.text+'</div></div>';
+  const dc=pct(d.dailyChange,"당일");
+  const hr=pct(d.holdingReturn,"보유수익률");
+  el.innerHTML='<div class="sector">'+d.sector+'</div><div class="inner">'+
+    '<div class="name" style="font-size:'+fs+'px">'+d.name+'</div>'+
+    '<div class="weight" style="font-size:'+Math.max(12,fs*.88)+'px">'+Number(d.weight).toFixed(1)+'%</div>'+
+    '<div class="change '+dc.cls+'">'+dc.text+'</div>'+
+    '<div class="holding '+hr.cls+'">'+hr.text+'</div>'+
+    '</div>';
   map.appendChild(el);
  });
 }
-window.addEventListener("resize",render);render();
+
+async function loadData(){
+ try{
+  const res=await fetch('data.json?t='+Date.now(),{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const payload=await res.json();
+  portfolioData=payload.items||[];
+  document.getElementById("badge").textContent=(payload.asOfDate||"-")+" 종가";
+  const upd=payload.updatedAt?new Date(payload.updatedAt):null;
+  document.getElementById("footer").textContent=
+    "최근 업데이트: "+(upd?upd.toLocaleString("ko-KR"):"-")+" · 종목명·섹터·비중·수익률만 공개";
+  render();
+ }catch(e){
+  document.getElementById("badge").textContent="데이터 오류";
+  document.getElementById("map").innerHTML='<div class="loading">데이터를 불러오지 못했습니다.</div>';
+  console.error(e);
+ }
+}
+window.addEventListener("resize",render);
+loadData();
 </script>
-</body></html>
+</body>
+</html>
