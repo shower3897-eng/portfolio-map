@@ -33,9 +33,9 @@ footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 <header>
   <div>
     <h1>MY PORTFOLIO</h1>
-    <div class="sub">메인포트 기준 · 금액/수량/매수가격 비공개 · 매일 종가 자동 업데이트</div>
+    <div class="sub">메인포트 기준 · 금액/수량/매수가격 비공개 · 종가 자동 갱신 · 엑셀 구성은 별도 반영</div>
   </div>
-  <div class="badge" id="badge">데이터 불러오는 중</div>
+  <div><button type="button" class="badge" id="refresh" style="cursor:pointer">새로고침</button> <span class="badge" id="badge">데이터 불러오는 중</span></div>
 </header>
 
 <div id="map"><div class="loading">포트폴리오 데이터를 불러오는 중입니다.</div></div>
@@ -101,7 +101,9 @@ async function loadData(){
   document.getElementById("badge").textContent=(payload.asOfDate||"-")+" 종가";
   const upd=payload.updatedAt?new Date(payload.updatedAt):null;
   document.getElementById("footer").textContent=
-    "최근 업데이트: "+(upd?upd.toLocaleString("ko-KR"):"-")+" · 종목명·섹터·비중·수익률만 공개";
+    "시세 데이터 갱신: "+(upd?upd.toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}):"-")+
+    " · 엑셀 구성 반영: "+(payload.holdingsUpdatedAt?new Date(payload.holdingsUpdatedAt).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}):"확인 필요")+
+    " · 엑셀 변경은 별도 동기화가 필요합니다.";
   render();
  }catch(e){
   document.getElementById("badge").textContent="데이터 오류";
@@ -110,6 +112,9 @@ async function loadData(){
  }
 }
 window.addEventListener("resize",render);
+document.getElementById("refresh").addEventListener("click",loadData);
+setInterval(()=>{if(!document.hidden)loadData();},60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadData();});
 loadData();
 </script>
 </body>
