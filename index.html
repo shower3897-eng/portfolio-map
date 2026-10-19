@@ -24,6 +24,7 @@ h1{margin:0;font-size:28px;letter-spacing:.4px}
 footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .legend span{padding:4px 8px;border-radius:5px;background:#1b222c;border:1px solid #2c3542}
+table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--muted)}.tile.compact .sector,.tile.compact .change,.tile.compact .holding{display:none}.tile.compact .name{font-size:11px!important}.tile.compact{padding:3px}header{flex-wrap:wrap}
 .loading{height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
 @media(max-width:700px){h1{font-size:22px}#map{height:68vh;min-height:520px}.wrap{padding:12px}}
 </style>
@@ -40,6 +41,7 @@ footer{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.6}
 
 <div id="map"><div class="loading">포트폴리오 데이터를 불러오는 중입니다.</div></div>
 
+<table aria-label="종목별 포트폴리오"><thead><tr><th>종목</th><th>비중</th><th>당일</th><th>보유수익률</th></tr></thead><tbody id="holdings"></tbody></table>
 <div class="legend">
   <span>박스 크기 = 최신 종가 기준 포트폴리오 비중</span>
   <span>당일 등락률 = 전 거래일 종가 대비</span>
@@ -53,6 +55,7 @@ let portfolioData=[];
 const sectorColors={"조선":"#7a1f2b","LNG 기자재":"#7b4a12","엔진":"#5f3c16","5G":"#243e7a","반도체":"#3a2f78","현금":"#38424f","현금성":"#45515f"};
 
 function splitTreemap(items,x,y,w,h){
+ items=items.filter(d=>Number.isFinite(d.weight)&&d.weight>0);
  if(!items.length)return[];
  if(items.length===1)return[{...items[0],x,y,w,h}];
  const total=items.reduce((a,b)=>a+b.weight,0);
@@ -74,11 +77,15 @@ function render(){
  const map=document.getElementById("map");
  if(!portfolioData.length){map.innerHTML='<div class="loading">표시할 데이터가 없습니다.</div>';return;}
  map.innerHTML="";
+ const tbody=document.getElementById("holdings");tbody.replaceChildren();
+ [...portfolioData].sort((a,b)=>b.weight-a.weight).forEach(d=>{const tr=document.createElement("tr");[d.name,Number(d.weight).toFixed(1)+"%",pct(d.dailyChange,"").text,pct(d.holdingReturn,"").text].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});tbody.appendChild(tr)});
  const rect=map.getBoundingClientRect();
  const boxes=splitTreemap([...portfolioData].sort((a,b)=>b.weight-a.weight),0,0,rect.width,rect.height);
  boxes.forEach(d=>{
   const el=document.createElement("div");el.className="tile";
   Object.assign(el.style,{left:d.x+"px",top:d.y+"px",width:d.w+"px",height:d.h+"px",background:sectorColors[d.sector]||"#39414d"});
+  el.title=d.name+" · "+Number(d.weight).toFixed(1)+"% · "+pct(d.holdingReturn,"보유수익률").text;
+  if(d.w<120||d.h<95)el.classList.add("compact");
   const area=d.w*d.h,fs=Math.max(11,Math.min(30,Math.sqrt(area)/15));
   const dc=pct(d.dailyChange,"당일");
   const hr=pct(d.holdingReturn,"보유수익률");
@@ -97,7 +104,7 @@ async function loadData(){
   const res=await fetch('data.json?t='+Date.now(),{cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   const payload=await res.json();
-  portfolioData=payload.items||[];
+  portfolioData=(payload.items||[]).filter(d=>Number.isFinite(d.weight)&&d.weight>0);
   document.getElementById("badge").textContent=(payload.asOfDate||"-")+" 종가";
   const upd=payload.updatedAt?new Date(payload.updatedAt):null;
   document.getElementById("footer").textContent=
