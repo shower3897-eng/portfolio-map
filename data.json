@@ -6,8 +6,8 @@
       "code": "329180",
       "name": "HD현대중공업",
       "sector": "조선",
-      "weight": 59.44339692398827,
-      "holdingReturn": -41.44737241291434,
+      "weight": 66.27894574909911,
+      "holdingReturn": -38.968214983672155,
       "dailyChange": -5.0819672131147575,
       "lastClose": 289500
     },
@@ -15,7 +15,7 @@
       "code": "009540",
       "name": "HD한국조선해양",
       "sector": "조선",
-      "weight": 3.359965911859913,
+      "weight": 3.3655840727187982,
       "holdingReturn": -34.640347078584895,
       "dailyChange": -2.0161290322580627,
       "lastClose": 243000
@@ -24,8 +24,8 @@
       "code": "082740",
       "name": "한화엔진",
       "sector": "엔진",
-      "weight": 0.4293289776265444,
-      "holdingReturn": -46.69161830855339,
+      "weight": 0.4300468537362909,
+      "holdingReturn": -46.69161830855337,
       "dailyChange": -3.7209302325581395,
       "lastClose": 31050
     },
@@ -33,8 +33,8 @@
       "code": "032500",
       "name": "케이엠더블유",
       "sector": "5G",
-      "weight": 1.2042117828105925,
-      "holdingReturn": 9.656100844449899,
+      "weight": 1.2062253316624174,
+      "holdingReturn": 9.656100844449877,
       "dailyChange": -0.9944751381215422,
       "lastClose": 17920
     },
@@ -42,8 +42,8 @@
       "code": "005935",
       "name": "삼성전자우",
       "sector": "반도체",
-      "weight": 2.270396719042788,
-      "holdingReturn": -30.417537153729768,
+      "weight": 2.2741930236231553,
+      "holdingReturn": -30.41753715372978,
       "dailyChange": -2.2036926742108442,
       "lastClose": 164200
     },
@@ -51,7 +51,7 @@
       "code": null,
       "name": "현금",
       "sector": "현금",
-      "weight": 31.909997663330376,
+      "weight": 25.059990947465256,
       "holdingReturn": null,
       "dailyChange": null,
       "lastClose": null
@@ -60,15 +60,15 @@
       "code": null,
       "name": "카뱅",
       "sector": "현금성",
-      "weight": 1.3827020213415275,
+      "weight": 1.3850140216949787,
       "holdingReturn": null,
       "dailyChange": null,
       "lastClose": null
     }
   ],
   "previousTradingDate": "2026-10-23",
-  "holdingsUpdatedAt": "2026-10-19T13:44:51+00:00",
+  "holdingsUpdatedAt": "2026-10-26T12:20:56.224Z",
   "holdingsSyncMode": "manual",
-  "holdingsSourceModifiedAt": "2026-10-17T01:36:00Z",
+  "holdingsSourceModifiedAt": "2026-10-26T07:16:35.642Z",
   "holdingsSource": "TP(202609)_PC.xlsx · 포트 · 메인포트"
 }
