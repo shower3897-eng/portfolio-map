@@ -1,57 +1,57 @@
 {
-  "asOfDate": "2026-10-27",
-  "updatedAt": "2026-10-27T17:21:17+09:00",
+  "asOfDate": "2026-10-28",
+  "updatedAt": "2026-10-28T17:26:03+09:00",
   "items": [
     {
       "code": "329180",
       "name": "HD현대중공업",
       "sector": "조선",
-      "weight": 66.3425476350347,
-      "holdingReturn": -38.54657916317939,
-      "dailyChange": 0.6908462867012188,
-      "lastClose": 291500
+      "weight": 65.73229494604999,
+      "holdingReturn": -39.81148662465769,
+      "dailyChange": -2.0583190394511175,
+      "lastClose": 285500
     },
     {
       "code": "009540",
       "name": "HD한국조선해양",
       "sector": "조선",
-      "weight": 3.393889169136016,
-      "holdingReturn": -33.69895290070444,
-      "dailyChange": 1.4403292181069949,
-      "lastClose": 246500
+      "weight": 3.3636977462769626,
+      "holdingReturn": -35.043801726247956,
+      "dailyChange": -2.0283975659229236,
+      "lastClose": 241500
     },
     {
       "code": "082740",
       "name": "한화엔진",
       "sector": "엔진",
-      "weight": 0.44402809616485417,
-      "holdingReturn": -44.631390996806644,
-      "dailyChange": 3.864734299516903,
-      "lastClose": 32250
+      "weight": 0.4610285523882713,
+      "holdingReturn": -43.17206331765271,
+      "dailyChange": 2.635658914728678,
+      "lastClose": 33100
     },
     {
       "code": "032500",
       "name": "케이엠더블유",
       "sector": "5G",
-      "weight": 1.1750098657879853,
-      "holdingReturn": 7.453188104271202,
-      "dailyChange": -2.00892857142857,
-      "lastClose": 17560
+      "weight": 1.200852630940428,
+      "holdingReturn": 8.55464447436054,
+      "dailyChange": 1.0250569476081939,
+      "lastClose": 17740
     },
     {
       "code": "005935",
       "name": "삼성전자우",
       "sector": "반도체",
-      "weight": 2.3557583644591173,
-      "holdingReturn": -27.49354815470868,
-      "dailyChange": 4.202192448233855,
-      "lastClose": 171100
+      "weight": 2.647780296344724,
+      "holdingReturn": -19.44198424436072,
+      "dailyChange": 11.104617182933962,
+      "lastClose": 190100
     },
     {
       "code": null,
       "name": "현금",
       "sector": "현금",
-      "weight": 24.911935563479798,
+      "weight": 25.20151032229488,
       "holdingReturn": null,
       "dailyChange": null,
       "lastClose": null
@@ -60,13 +60,13 @@
       "code": null,
       "name": "카뱅",
       "sector": "현금성",
-      "weight": 1.3768313059375321,
+      "weight": 1.392835505704747,
       "holdingReturn": null,
       "dailyChange": null,
       "lastClose": null
     }
   ],
-  "previousTradingDate": "2026-10-26",
+  "previousTradingDate": "2026-10-27",
   "holdingsUpdatedAt": "2026-10-26T12:20:56.224Z",
   "holdingsSyncMode": "manual",
   "holdingsSourceModifiedAt": "2026-10-26T07:16:35.642Z",
